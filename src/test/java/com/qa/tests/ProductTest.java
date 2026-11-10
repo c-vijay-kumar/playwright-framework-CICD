@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 
 public class ProductTest extends BaseTest {
 
-    @Test(groups = {"smoke", timeOut = 60000})
+    @Test(groups = {"smoke"}, timeOut = 60000)
     public void verifyHomePage() {
         getPage().navigate(getBaseUrl());
 
