@@ -1,5 +1,11 @@
 target/
-auth/
+*.log
+.env
+.env.*
+!.env.example
+
+playwright/.auth/
+.auth/
+
 .idea/
 .vscode/
-*.iml
