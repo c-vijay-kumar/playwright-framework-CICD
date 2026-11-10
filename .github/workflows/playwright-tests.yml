@@ -1,0 +1,64 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '30 20 * * *'      # nightly, 02:00 IST
+  workflow_dispatch:           # manual run with options
+    inputs:
+      env:
+        description: 'Environment'
+        default: 'qa'
+        type: choice
+        options: [qa, dev, staging]
+      browser:
+        description: 'Browser'
+        default: 'chromium'
+        type: choice
+        options: [chromium, firefox, webkit]
+      groups:
+        description: 'TestNG group (smoke / regression)'
+        default: 'smoke'
+        type: choice
+        options: [smoke, regression]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Install Playwright browsers
+        run: mvn -B exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps"
+
+      - name: Run tests
+        run: >
+          mvn -B clean test
+          -Denv=${{ github.event.inputs.env || 'qa' }}
+          -Dbrowser=${{ github.event.inputs.browser || 'chromium' }}
+          -Dgroups=${{ github.event.inputs.groups || 'smoke' }}
+          -Dheadless=true
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            target/surefire-reports/
+            target/screenshots/
+            target/traces/
+          if-no-files-found: ignore
